@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 use sha2::{Sha256, Digest};
-use md5;
 
 /// 模型验证器
 pub struct ModelValidator {
