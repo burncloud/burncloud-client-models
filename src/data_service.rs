@@ -1,10 +1,34 @@
 use burncloud_service_models::{
-    InstalledModel, AvailableModel, Model, ModelStatus, ModelType, RuntimeConfig,
-    ModelRuntime, RuntimeMetrics, SystemRequirements
+    InstalledModel, ModelStatus, ModelType, AvailableModel, RuntimeConfig
 };
 use uuid::Uuid;
 use chrono::Utc;
 use std::collections::HashMap;
+
+#[derive(Debug, Clone)]
+pub struct ModelRuntime {
+    pub model_id: Uuid,
+    pub status: ModelStatus,
+    pub port: Option<u32>,
+    pub memory_usage_mb: u64,
+    pub requests_per_second: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct RuntimeMetrics {
+    pub total_requests: u64,
+    pub average_response_time_ms: f32,
+    pub error_rate: f32,
+    pub uptime_seconds: u64,
+}
+
+#[derive(Debug, Clone)]
+pub struct SystemRequirements {
+    pub min_memory_gb: f32,
+    pub min_disk_space_gb: f32,
+    pub gpu_required: bool,
+    pub cpu_cores: u32,
+}
 
 /// 模型数据服务 - 提供模型数据的增删改查功能
 #[derive(Clone)]
@@ -94,6 +118,7 @@ impl ModelDataService {
 
         // 创建已安装模型
         let installed_model = InstalledModel {
+            id: Uuid::new_v4(),
             model: available_model.model.clone(),
             install_path,
             installed_at: Utc::now(),
@@ -102,14 +127,11 @@ impl ModelDataService {
             process_id: None,
             last_used: None,
             usage_count: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         self.installed_models.push(installed_model);
-
-        // 更新可用模型的安装状态
-        if let Some(available) = self.available_models.iter_mut().find(|m| &m.model.id == model_id) {
-            available.is_installed = true;
-        }
 
         Ok(())
     }
@@ -127,11 +149,6 @@ impl ModelDataService {
         // 检查模型是否在运行
         if matches!(removed_model.status, ModelStatus::Running) {
             return Err("请先停止模型再卸载".to_string());
-        }
-
-        // 更新可用模型的安装状态
-        if let Some(available) = self.available_models.iter_mut().find(|m| &m.model.id == model_id) {
-            available.is_installed = false;
         }
 
         Ok(())

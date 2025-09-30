@@ -224,10 +224,7 @@ fn create_qwen_14b_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string(), "arm64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(5);
-    available.last_updated = Utc::now() - chrono::Duration::days(1);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 创建 DeepSeek-Coder-V2 可下载模型示例
@@ -265,10 +262,7 @@ fn create_deepseek_coder_v2_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(3);
-    available.last_updated = Utc::now() - chrono::Duration::hours(12);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 创建 Qwen2.5-32B 可下载模型示例
@@ -306,10 +300,7 @@ fn create_qwen_32b_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(1);
-    available.last_updated = Utc::now() - chrono::Duration::hours(6);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 创建 Llama 3 8B 可下载模型示例
@@ -347,10 +338,7 @@ fn create_llama_3_8b_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string(), "arm64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(15);
-    available.last_updated = Utc::now() - chrono::Duration::days(7);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 创建 ChatGLM 6B 可下载模型示例
@@ -388,10 +376,7 @@ fn create_chatglm_6b_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string(), "arm64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(25);
-    available.last_updated = Utc::now() - chrono::Duration::days(12);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 创建 Baichuan 13B 可下载模型示例
@@ -429,52 +414,41 @@ fn create_baichuan_13b_available() -> AvailableModel {
         supported_architectures: vec!["x86_64".to_string()],
     };
 
-    let mut available = AvailableModel::from_model(model, system_requirements);
-    available.published_at = Utc::now() - chrono::Duration::days(40);
-    available.last_updated = Utc::now() - chrono::Duration::days(20);
-    available
+    AvailableModel::from_model(model, system_requirements)
 }
 
 /// 获取示例运行时配置
 pub fn get_example_runtime_configs() -> Vec<RuntimeConfig> {
     vec![
-        RuntimeConfig {
-            max_context_length: Some(4096),
-            temperature: Some(0.7),
-            top_p: Some(0.9),
-            top_k: Some(50),
-            max_tokens: Some(2048),
-            stop_sequences: vec!["</s>".to_string(), "<|endoftext|>".to_string()],
-            batch_size: Some(1),
-            max_concurrent_requests: Some(10),
-            gpu_device_ids: vec![0],
-            memory_limit_mb: Some(8192),
-            enable_streaming: true,
-            custom_params: {
-                let mut map = HashMap::new();
-                map.insert("repetition_penalty".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(1.1).unwrap()));
-                map.insert("do_sample".to_string(), serde_json::Value::Bool(true));
-                map
-            },
+        {
+            let mut config = HashMap::new();
+            config.insert("max_context_length".to_string(), serde_json::Value::Number(serde_json::Number::from(4096)));
+            config.insert("temperature".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(0.7).unwrap()));
+            config.insert("top_p".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(0.9).unwrap()));
+            config.insert("top_k".to_string(), serde_json::Value::Number(serde_json::Number::from(50)));
+            config.insert("max_tokens".to_string(), serde_json::Value::Number(serde_json::Number::from(2048)));
+            config.insert("batch_size".to_string(), serde_json::Value::Number(serde_json::Number::from(1)));
+            config.insert("max_concurrent_requests".to_string(), serde_json::Value::Number(serde_json::Number::from(10)));
+            config.insert("memory_limit_mb".to_string(), serde_json::Value::Number(serde_json::Number::from(8192)));
+            config.insert("enable_streaming".to_string(), serde_json::Value::Bool(true));
+            config.insert("repetition_penalty".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(1.1).unwrap()));
+            config.insert("do_sample".to_string(), serde_json::Value::Bool(true));
+            config
         },
-        RuntimeConfig {
-            max_context_length: Some(32768),
-            temperature: Some(0.1),
-            top_p: Some(0.95),
-            top_k: Some(40),
-            max_tokens: Some(4096),
-            stop_sequences: vec!["```".to_string(), "//".to_string()],
-            batch_size: Some(2),
-            max_concurrent_requests: Some(5),
-            gpu_device_ids: vec![0, 1],
-            memory_limit_mb: Some(16384),
-            enable_streaming: true,
-            custom_params: {
-                let mut map = HashMap::new();
-                map.insert("code_mode".to_string(), serde_json::Value::Bool(true));
-                map.insert("syntax_highlighting".to_string(), serde_json::Value::Bool(true));
-                map
-            },
+        {
+            let mut config = HashMap::new();
+            config.insert("max_context_length".to_string(), serde_json::Value::Number(serde_json::Number::from(32768)));
+            config.insert("temperature".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(0.1).unwrap()));
+            config.insert("top_p".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(0.95).unwrap()));
+            config.insert("top_k".to_string(), serde_json::Value::Number(serde_json::Number::from(40)));
+            config.insert("max_tokens".to_string(), serde_json::Value::Number(serde_json::Number::from(4096)));
+            config.insert("batch_size".to_string(), serde_json::Value::Number(serde_json::Number::from(2)));
+            config.insert("max_concurrent_requests".to_string(), serde_json::Value::Number(serde_json::Number::from(5)));
+            config.insert("memory_limit_mb".to_string(), serde_json::Value::Number(serde_json::Number::from(16384)));
+            config.insert("enable_streaming".to_string(), serde_json::Value::Bool(true));
+            config.insert("code_mode".to_string(), serde_json::Value::Bool(true));
+            config.insert("syntax_highlighting".to_string(), serde_json::Value::Bool(true));
+            config
         },
     ]
 }

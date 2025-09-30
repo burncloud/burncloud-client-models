@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use burncloud_service_models::{ModelStatus, ModelType};
+use burncloud_service_models::ModelStatus;
 use crate::examples::{get_example_installed_models, get_example_available_models};
 
 /// 简化版的增强模型管理 - 仅用于演示 burncloud-service-models 集成

@@ -226,8 +226,12 @@ fn format_type_icon(model_type: &ModelType) -> &'static str {
         ModelType::Text => "📝",
         ModelType::Embedding => "🔗",
         ModelType::Multimodal => "🎭",
+        ModelType::Image => "🖼️",
         ModelType::ImageGeneration => "🎨",
+        ModelType::Audio => "🎵",
         ModelType::Speech => "🎤",
+        ModelType::Video => "🎬",
+        ModelType::Other => "📦",
     }
 }
 
@@ -238,7 +242,11 @@ fn format_type_name(model_type: &ModelType) -> &'static str {
         ModelType::Text => "文本生成",
         ModelType::Embedding => "嵌入模型",
         ModelType::Multimodal => "多模态",
+        ModelType::Image => "图像处理",
         ModelType::ImageGeneration => "图像生成",
+        ModelType::Audio => "音频处理",
         ModelType::Speech => "语音模型",
+        ModelType::Video => "视频处理",
+        ModelType::Other => "其他类型",
     }
 }

@@ -8,6 +8,10 @@ pub mod data_service;
 pub mod state;
 pub mod enhanced_models;
 pub mod simple_models;
+pub mod integrated_service;
+
+#[cfg(test)]
+pub mod integration_test;
 
 pub use models::*;
 pub use discovery::*;
@@ -19,6 +23,9 @@ pub use data_service::*;
 pub use state::*;
 pub use enhanced_models::*;
 pub use simple_models::*;
+pub use integrated_service::*;
 
-// Re-export burncloud-service-models for convenience
+// Re-export for convenience
 pub use burncloud_service_models;
+pub use burncloud_database_core;
+pub use burncloud_database_models;

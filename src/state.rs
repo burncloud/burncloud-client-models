@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use burncloud_service_models::{InstalledModel, AvailableModel, ModelStatus, ModelType};
+use burncloud_service_models::{InstalledModel, ModelStatus, ModelType, AvailableModel};
 use crate::data_service::{ModelDataService, ModelUsageStats, ResourceOverview};
 use uuid::Uuid;
 

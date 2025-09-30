@@ -103,8 +103,12 @@ pub fn InstalledModelCard(model: InstalledModel) -> Element {
         ModelType::Text => "📝",
         ModelType::Embedding => "🔗",
         ModelType::Multimodal => "🎭",
+        ModelType::Image => "🖼️",
         ModelType::ImageGeneration => "🎨",
+        ModelType::Audio => "🎵",
         ModelType::Speech => "🎤",
+        ModelType::Video => "🎬",
+        ModelType::Other => "📦",
     };
 
     let type_display = match model.model.model_type {
@@ -113,8 +117,12 @@ pub fn InstalledModelCard(model: InstalledModel) -> Element {
         ModelType::Text => "📝文本生成",
         ModelType::Embedding => "🔗嵌入模型",
         ModelType::Multimodal => "🎭多模态",
+        ModelType::Image => "🖼️图像处理",
         ModelType::ImageGeneration => "🎨图像生成",
+        ModelType::Audio => "🎵音频处理",
         ModelType::Speech => "🎤语音模型",
+        ModelType::Video => "🎬视频处理",
+        ModelType::Other => "📦其他类型",
     };
 
     let action_button = match model.status {
@@ -195,8 +203,12 @@ pub fn AvailableModelCard(model: AvailableModel) -> Element {
         ModelType::Text => "📝",
         ModelType::Embedding => "🔗",
         ModelType::Multimodal => "🎭",
+        ModelType::Image => "🖼️",
         ModelType::ImageGeneration => "🎨",
+        ModelType::Audio => "🎵",
         ModelType::Speech => "🎤",
+        ModelType::Video => "🎬",
+        ModelType::Other => "📦",
     };
 
     let type_display = match model.model.model_type {
@@ -205,14 +217,18 @@ pub fn AvailableModelCard(model: AvailableModel) -> Element {
         ModelType::Text => "📝文本生成",
         ModelType::Embedding => "🔗嵌入模型",
         ModelType::Multimodal => "🎭多模态",
+        ModelType::Image => "🖼️图像处理",
         ModelType::ImageGeneration => "🎨图像生成",
+        ModelType::Audio => "🎵音频处理",
         ModelType::Speech => "🎤语音模型",
+        ModelType::Video => "🎬视频处理",
+        ModelType::Other => "📦其他类型",
     };
 
     // 检查是否为最新版本（最近7天内更新）
     let is_latest = {
         let now = chrono::Utc::now();
-        let days_diff = now.signed_duration_since(model.last_updated).num_days();
+        let days_diff = now.signed_duration_since(model.model.updated_at).num_days();
         days_diff <= 7
     };
 
@@ -235,11 +251,7 @@ pub fn AvailableModelCard(model: AvailableModel) -> Element {
                     }
                 }
                 div { class: "model-actions",
-                    if model.is_installed {
-                        button { class: "btn btn-secondary", disabled: true, "已安装" }
-                    } else {
-                        button { class: "btn btn-primary", "下载" }
-                    }
+                    button { class: "btn btn-primary", "下载" }
                     button { class: "btn btn-subtle", "详情" }
                 }
             }
@@ -260,7 +272,7 @@ pub fn AvailableModelCard(model: AvailableModel) -> Element {
                 }
                 div {
                     div { class: "metric-label", "更新时间" }
-                    div { class: "font-medium", "{model.last_updated.format(\"%Y-%m-%d\")}" }
+                    div { class: "font-medium", "{model.model.updated_at.format(\"%Y-%m-%d\")}" }
                 }
                 div {
                     div { class: "metric-label", "下载次数" }
