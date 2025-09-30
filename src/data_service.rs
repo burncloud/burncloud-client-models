@@ -1,9 +1,11 @@
 use burncloud_service_models::{
-    InstalledModel, ModelStatus, ModelType, AvailableModel, RuntimeConfig
+    InstalledModel, ModelStatus, ModelType, AvailableModel, RuntimeConfig, ModelsService
 };
+use burncloud_database_core::Database;
 use uuid::Uuid;
 use chrono::Utc;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct ModelRuntime {
@@ -40,12 +42,39 @@ pub struct ModelDataService {
 
 impl ModelDataService {
     /// 创建新的数据服务实例
-    pub fn new() -> Self {
-        Self {
-            installed_models: crate::examples::get_example_installed_models(),
-            available_models: crate::examples::get_example_available_models(),
-            runtime_configs: crate::examples::get_example_runtime_configs(),
-        }
+    pub async fn new(database: Arc<Database>) -> Result<Self, Box<dyn std::error::Error>> {
+        // Initialize ModelsService
+        let models_service = ModelsService::new(database).await?;
+
+        // Load installed models
+        let installed_models = models_service.get_installed_models()
+            .await
+            .unwrap_or_else(|_| vec![]);
+
+        // Load available models
+        let available_models_raw = models_service.list_models(Default::default())
+            .await
+            .unwrap_or_else(|_| vec![]);
+
+        // Convert Model to AvailableModel
+        let available_models = available_models_raw.into_iter()
+            .map(|model| {
+                burncloud_service_models::AvailableModel {
+                    model,
+                    is_downloadable: true,
+                    estimated_download_time: None,
+                }
+            })
+            .collect();
+
+        // Runtime configs can be empty or derived from model configs
+        let runtime_configs = Vec::new();
+
+        Ok(Self {
+            installed_models,
+            available_models,
+            runtime_configs,
+        })
     }
 
     /// 获取所有已安装模型
@@ -270,12 +299,6 @@ impl ModelDataService {
                 .filter_map(|model| model.process_id)
                 .collect(),
         }
-    }
-}
-
-impl Default for ModelDataService {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

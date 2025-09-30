@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 use burncloud_service_models::{InstalledModel, AvailableModel, ModelStatus, ModelType};
-use crate::examples::{get_example_installed_models, get_example_available_models};
 
 #[component]
 pub fn ModelManagement() -> Element {
     let mut search_term = use_signal(|| String::new());
 
-    // 使用 burncloud-service-models 的数据
-    let installed_models = use_signal(|| get_example_installed_models());
-    let available_models = use_signal(|| get_example_available_models());
+    // NOTE: This component now requires AppState to be initialized with database
+    // Data should come from AppState context instead of example data
+    let installed_models = use_signal(|| Vec::<InstalledModel>::new());
+    let available_models = use_signal(|| Vec::<AvailableModel>::new());
 
     rsx! {
         div { class: "page-header",

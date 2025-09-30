@@ -361,14 +361,11 @@ impl ClientError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
 
     #[tokio::test]
     async fn test_service_initialization() {
-        let temp_dir = tempdir().unwrap();
-        let db_path = temp_dir.path().join("test.db").to_string_lossy().to_string();
-
-        let service = IntegratedModelService::new(Some(db_path)).await.unwrap();
+        // Use in-memory database for testing
+        let service = IntegratedModelService::new(Some(":memory:".to_string())).await.unwrap();
 
         // Test basic functionality
         let models = service.list_models(None).await.unwrap();
@@ -390,7 +387,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_validation() {
-        let service = IntegratedModelService::new(None).await.unwrap();
+        // Use in-memory database for testing
+        let service = IntegratedModelService::new(Some(":memory:".to_string())).await.unwrap();
 
         let invalid_request = CreateModelRequest {
             name: "".to_string(), // Empty name should fail

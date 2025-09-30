@@ -1,15 +1,14 @@
 use dioxus::prelude::*;
-use burncloud_service_models::ModelStatus;
-use crate::examples::{get_example_installed_models, get_example_available_models};
+use burncloud_service_models::{ModelStatus, InstalledModel, AvailableModel};
 
-/// 简化版的增强模型管理 - 仅用于演示 burncloud-service-models 集成
+/// 简化版的增强模型管理 - 现在从 AppState 获取数据
 #[component]
 pub fn EnhancedModelManagement() -> Element {
     let mut search_term = use_signal(|| String::new());
 
-    // 使用静态数据
-    let installed_models = get_example_installed_models();
-    let available_models = get_example_available_models();
+    // NOTE: This component now requires AppState to be initialized with database
+    let installed_models: Vec<InstalledModel> = Vec::new();
+    let available_models: Vec<AvailableModel> = Vec::new();
 
     rsx! {
         div { class: "model-management-container",

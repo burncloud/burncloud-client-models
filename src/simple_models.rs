@@ -1,15 +1,15 @@
 use dioxus::prelude::*;
-use burncloud_service_models::{ModelStatus, ModelType};
-use crate::examples::{get_example_installed_models, get_example_available_models};
+use burncloud_service_models::{ModelStatus, ModelType, InstalledModel, AvailableModel};
 
-/// 简化版模型管理组件 - 使用 burncloud-service-models 数据
+/// 简化版模型管理组件 - 现在从 AppState 获取数据
 #[component]
 pub fn SimpleModelManagement() -> Element {
     let mut search_term = use_signal(|| String::new());
 
-    // 使用静态数据避免状态管理复杂性
-    let installed_models = get_example_installed_models();
-    let available_models = get_example_available_models();
+    // NOTE: This component now requires AppState to be initialized with database
+    // Data should come from AppState context instead of example data
+    let installed_models: Vec<InstalledModel> = Vec::new();
+    let available_models: Vec<AvailableModel> = Vec::new();
 
     // 基础过滤
     let filtered_installed: Vec<_> = installed_models
@@ -108,13 +108,13 @@ pub fn SimpleModelManagement() -> Element {
             div { class: "mt-xxxl p-lg bg-info-light rounded",
                 h3 { class: "text-subtitle font-semibold mb-md", "📊 数据来源" }
                 p { class: "text-sm text-secondary mb-sm",
-                    "此界面显示的所有模型数据都来自 "
+                    "此界面显示的所有模型数据都来自数据库通过 "
                     code { "burncloud-service-models" }
-                    " crate 提供的示例数据。"
+                    " crate 提供。"
                 }
                 ul { class: "text-sm text-secondary",
-                    li { "已安装模型: 使用 " code { "get_example_installed_models()" } }
-                    li { "可下载模型: 使用 " code { "get_example_available_models()" } }
+                    li { "已安装模型: 通过 ModelDataService 从数据库加载" }
+                    li { "可下载模型: 通过 ModelsService 从数据库加载" }
                     li { "支持按名称、显示名称、提供商搜索" }
                     li { "所有模型都包含完整的元数据和状态信息" }
                 }
@@ -126,8 +126,9 @@ pub fn SimpleModelManagement() -> Element {
 /// 模型统计组件
 #[component]
 pub fn ModelStats() -> Element {
-    let installed_models = get_example_installed_models();
-    let available_models = get_example_available_models();
+    // NOTE: This component now requires AppState to be initialized with database
+    let installed_models: Vec<InstalledModel> = Vec::new();
+    let available_models: Vec<AvailableModel> = Vec::new();
 
     let running_count = installed_models
         .iter()

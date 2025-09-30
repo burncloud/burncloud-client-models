@@ -1,12 +1,15 @@
 use dioxus::prelude::*;
 use burncloud_service_models::{InstalledModel, ModelStatus, ModelType, AvailableModel};
+use burncloud_database_core::Database;
 use crate::data_service::{ModelDataService, ModelUsageStats, ResourceOverview};
 use uuid::Uuid;
+use std::sync::Arc;
 
 /// 全局应用状态管理
 #[derive(Clone)]
 pub struct AppState {
     pub data_service: ModelDataService,
+    pub database: Arc<Database>,
     pub selected_model: Option<Uuid>,
     pub search_query: String,
     pub filter_type: Option<ModelType>,
@@ -14,14 +17,17 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new() -> Self {
-        Self {
-            data_service: ModelDataService::new(),
+    pub async fn new(database: Arc<Database>) -> Result<Self, Box<dyn std::error::Error>> {
+        let data_service = ModelDataService::new(database.clone()).await?;
+
+        Ok(Self {
+            data_service,
+            database,
             selected_model: None,
             search_query: String::new(),
             filter_type: None,
             filter_status: None,
-        }
+        })
     }
 
     /// 获取过滤后的已安装模型
@@ -83,26 +89,28 @@ impl AppState {
     }
 }
 
-impl Default for AppState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// 应用状态钩子
 pub fn use_app_state() -> Signal<AppState> {
     use_context::<Signal<AppState>>()
 }
 
 /// 应用状态提供者组件
-#[component]
-pub fn AppStateProvider(children: Element) -> Element {
-    let state = use_signal(AppState::new);
+/// 注意: 此组件需要在实际使用时通过 use_resource 或 use_effect 进行异步初始化
+/// 需要传入 Arc<Database> 来初始化 AppState
+/// 由于 Arc<Database> 不实现 PartialEq，这不是一个标准的 Dioxus 组件
+/// 请在应用代码中手动创建 AppState 并使用 use_context_provider
+pub fn create_app_state_provider(_database: Arc<Database>) -> impl Fn(Element) -> Element {
+    move |children: Element| {
+        // This signature has been updated to accept database parameter
+        // Actual async initialization should be handled in the consuming code
+        // using use_resource or similar async initialization patterns
+        let state = use_signal(|| None::<AppState>);
 
-    use_context_provider(|| state);
+        use_context_provider(|| state);
 
-    rsx! {
-        {children}
+        rsx! {
+            {children}
+        }
     }
 }
 
