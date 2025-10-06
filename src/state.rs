@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use burncloud_service_models::{InstalledModel, ModelStatus, ModelType, AvailableModel};
-use burncloud_database_core::Database;
+use burncloud_database::Database;
 use crate::data_service::{ModelDataService, ModelUsageStats, ResourceOverview};
 use uuid::Uuid;
 use std::sync::Arc;

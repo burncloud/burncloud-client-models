@@ -1,7 +1,7 @@
 use burncloud_service_models::{
     InstalledModel, ModelStatus, ModelType, AvailableModel, RuntimeConfig, ModelsService
 };
-use burncloud_database_core::Database;
+use burncloud_database::Database;
 use uuid::Uuid;
 use chrono::Utc;
 use std::collections::HashMap;

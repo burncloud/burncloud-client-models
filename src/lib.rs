@@ -22,5 +22,5 @@ pub use integrated_service::*;
 
 // Re-export for convenience
 pub use burncloud_service_models;
-pub use burncloud_database_core;
+pub use burncloud_database;
 pub use burncloud_database_models;

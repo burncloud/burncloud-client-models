@@ -2,7 +2,7 @@ use burncloud_service_models::{
     Model, InstalledModel, CreateModelRequest, UpdateModelRequest, ModelFilter,
     ModelsService, ServiceError, ModelType, ModelStatus, SizeCategory
 };
-use burncloud_database_core::Database;
+use burncloud_database::Database;
 use std::sync::Arc;
 use uuid::Uuid;
 use std::collections::HashMap;

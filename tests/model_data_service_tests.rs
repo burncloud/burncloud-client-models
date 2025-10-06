@@ -8,7 +8,7 @@ use burncloud_client_models::{
     burncloud_service_models::{
         ModelsService, CreateModelRequest, ModelType, ModelStatus
     },
-    burncloud_database_core::Database
+    burncloud_database::Database
 };
 use std::sync::Arc;
 use std::collections::HashMap;

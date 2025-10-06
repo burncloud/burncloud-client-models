@@ -4,7 +4,7 @@
 //! 1. burncloud-client-models (frontend integration)
 //! 2. burncloud-service-models (business logic and validation)
 //! 3. burncloud-database-models (database operations)
-//! 4. burncloud-database-core (SQLite connection and queries)
+//! 4. burncloud-database (SQLite connection and queries)
 
 use burncloud_client_models::IntegratedModelService;
 use burncloud_service_models::{CreateModelRequest, UpdateModelRequest, ModelType, ModelStatus};

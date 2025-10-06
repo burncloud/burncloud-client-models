@@ -34,7 +34,7 @@ sha2 = "0.10"
 md5 = "0.7"
 futures-util = "0.3"
 burncloud-service-models = { path = "../burncloud-service-models" }
-burncloud-database-core = { path = "../burncloud-database-core" }
+burncloud-database = { path = "../burncloud-database" }
 burncloud-database-models = { path = "../burncloud-database-models" }
 
 [dev-dependencies]

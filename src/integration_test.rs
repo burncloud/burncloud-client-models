@@ -7,7 +7,7 @@ use uuid::Uuid;
 /// 1. burncloud-client-models (frontend integration)
 /// 2. burncloud-service-models (business logic and validation)
 /// 3. burncloud-database-models (database operations)
-/// 4. burncloud-database-core (SQLite connection and queries)
+/// 4. burncloud-database (SQLite connection and queries)
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting BurnCloud Multi-Layer Database Integration Test");
@@ -260,7 +260,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n🎉 Integration test completed successfully!");
-    println!("✅ All four layers (client, service, database-models, database-core) working together");
+    println!("✅ All four layers (client, service, database-models, database) working together");
 
     // Cleanup
     println!("\n🧹 Cleaning up test database...");
