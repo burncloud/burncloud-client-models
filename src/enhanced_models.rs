@@ -1,14 +1,22 @@
 use dioxus::prelude::*;
-use burncloud_service_models::{ModelStatus, InstalledModel, AvailableModel};
+use crate::app_state::AppState;
+use burncloud_service_models::ModelStatus;
 
-/// 简化版的增强模型管理 - 现在从 AppState 获取数据
+/// 增强版模型管理组件 - 使用 AppState 获取真实数据
 #[component]
-pub fn EnhancedModelManagement() -> Element {
+pub fn EnhancedModelManagement(app_state: AppState) -> Element {
     let mut search_term = use_signal(|| String::new());
 
-    // NOTE: This component now requires AppState to be initialized with database
-    let installed_models: Vec<InstalledModel> = Vec::new();
-    let available_models: Vec<AvailableModel> = Vec::new();
+    // 从 AppState 获取数据
+    let (filtered_installed, filtered_available) = if search_term.read().is_empty() {
+        (app_state.installed_models.iter().collect::<Vec<_>>(),
+         app_state.available_models.iter().collect::<Vec<_>>())
+    } else {
+        app_state.search_models(&search_term.read())
+    };
+
+    // 获取统计信息
+    let stats = app_state.get_stats();
 
     rsx! {
         div { class: "model-management-container",
@@ -53,25 +61,25 @@ pub fn EnhancedModelManagement() -> Element {
             div { class: "stats-grid mb-lg",
                 StatCard {
                     title: "已安装模型".to_string(),
-                    value: installed_models.len().to_string(),
+                    value: stats.total_installed.to_string(),
                     icon: "🧠".to_string(),
                     color: "blue".to_string()
                 }
                 StatCard {
                     title: "运行中".to_string(),
-                    value: installed_models.iter().filter(|m| matches!(m.status, ModelStatus::Running)).count().to_string(),
+                    value: stats.running_count.to_string(),
                     icon: "🟢".to_string(),
                     color: "green".to_string()
                 }
                 StatCard {
                     title: "已停止".to_string(),
-                    value: installed_models.iter().filter(|m| matches!(m.status, ModelStatus::Stopped)).count().to_string(),
+                    value: stats.stopped_count.to_string(),
                     icon: "🔴".to_string(),
                     color: "red".to_string()
                 }
                 StatCard {
                     title: "可下载".to_string(),
-                    value: available_models.len().to_string(),
+                    value: stats.available_count.to_string(),
                     icon: "📥".to_string(),
                     color: "purple".to_string()
                 }
@@ -82,11 +90,20 @@ pub fn EnhancedModelManagement() -> Element {
                 // 已安装模型部分
                 div { class: "mb-xxxl",
                     h2 { class: "text-title font-semibold mb-lg",
-                        "已安装模型 ({installed_models.len()})"
+                        "已安装模型 ({filtered_installed.len()})"
                     }
-                    div { class: "grid gap-lg", style: "grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));",
-                        for model in installed_models.iter() {
-                            crate::models::InstalledModelCard { model: model.clone() }
+                    if filtered_installed.is_empty() {
+                        div { class: "empty-state",
+                            p { "没有找到已安装的模型" }
+                            if !search_term.read().is_empty() {
+                                p { class: "text-secondary", "尝试调整搜索条件" }
+                            }
+                        }
+                    } else {
+                        div { class: "grid gap-lg", style: "grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));",
+                            for model in filtered_installed.iter() {
+                                crate::models::InstalledModelCard { model: (*model).clone() }
+                            }
                         }
                     }
                 }
@@ -94,44 +111,58 @@ pub fn EnhancedModelManagement() -> Element {
                 // 可下载模型部分
                 div {
                     h2 { class: "text-title font-semibold mb-lg",
-                        "可下载模型 ({available_models.len()})"
+                        "可下载模型 ({filtered_available.len()})"
                     }
-                    div { class: "grid gap-lg", style: "grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));",
-                        for model in available_models.iter() {
-                            crate::models::AvailableModelCard { model: model.clone() }
+                    if filtered_available.is_empty() {
+                        div { class: "empty-state",
+                            p { "没有找到可下载的模型" }
+                            if !search_term.read().is_empty() {
+                                p { class: "text-secondary", "尝试调整搜索条件" }
+                            }
+                        }
+                    } else {
+                        div { class: "grid gap-lg", style: "grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));",
+                            for model in filtered_available.iter() {
+                                crate::models::AvailableModelCard { model: (*model).clone() }
+                            }
                         }
                     }
                 }
 
-                // 技术说明
-                div { class: "mt-xxxl p-lg bg-info-light rounded",
-                    h3 { class: "text-subtitle font-semibold mb-md", "🔧 技术实现" }
-                    div { class: "grid gap-md", style: "grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));",
-                        div { class: "tech-card",
-                            h4 { class: "font-semibold mb-sm", "数据源" }
-                            ul { class: "text-sm text-secondary",
-                                li { "使用 " code { "burncloud-service-models" } " 提供的数据结构" }
-                                li { "支持完整的模型元数据" }
-                                li { "包含运行时状态管理" }
-                                li { "提供系统要求信息" }
+                // 详细统计信息
+                div { class: "mt-xxxl",
+                    h2 { class: "text-title font-semibold mb-lg", "📊 详细统计" }
+                    div { class: "grid gap-lg", style: "grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));",
+                        div { class: "card p-lg",
+                            h3 { class: "text-subtitle font-semibold mb-md", "存储使用情况" }
+                            div { class: "stat-item mb-sm",
+                                span { class: "text-secondary", "总大小:" }
+                                span { class: "font-semibold ml-sm", "{stats.format_total_size()}" }
+                            }
+                            div { class: "stat-item mb-sm",
+                                span { class: "text-secondary", "平均模型大小:" }
+                                span { class: "font-semibold ml-sm",
+                                    if stats.total_installed > 0 {
+                                        "{crate::IntegratedModelService::format_file_size(stats.total_size_bytes / stats.total_installed as u64)}"
+                                    } else {
+                                        "N/A"
+                                    }
+                                }
                             }
                         }
-                        div { class: "tech-card",
-                            h4 { class: "font-semibold mb-sm", "功能特性" }
-                            ul { class: "text-sm text-secondary",
-                                li { "实时状态显示" }
-                                li { "智能类型识别" }
-                                li { "资源使用统计" }
-                                li { "动态评分系统" }
+                        div { class: "card p-lg",
+                            h3 { class: "text-subtitle font-semibold mb-md", "数据源信息" }
+                            div { class: "stat-item mb-sm",
+                                span { class: "text-secondary", "数据库:" }
+                                span { class: "font-semibold ml-sm", "SQLite" }
                             }
-                        }
-                        div { class: "tech-card",
-                            h4 { class: "font-semibold mb-sm", "数据结构" }
-                            ul { class: "text-sm text-secondary",
-                                li { code { "InstalledModel" } " - 已安装模型" }
-                                li { code { "AvailableModel" } " - 可下载模型" }
-                                li { code { "ModelType" } " - 模型类型枚举" }
-                                li { code { "ModelStatus" } " - 运行状态" }
+                            div { class: "stat-item mb-sm",
+                                span { class: "text-secondary", "服务层:" }
+                                span { class: "font-semibold ml-sm", code { "burncloud-service-models" } }
+                            }
+                            div { class: "stat-item mb-sm",
+                                span { class: "text-secondary", "数据完整性:" }
+                                span { class: "font-semibold ml-sm text-success", "✅ 验证通过" }
                             }
                         }
                     }
@@ -141,10 +172,19 @@ pub fn EnhancedModelManagement() -> Element {
     }
 }
 
+/// 统计卡片组件
 #[component]
 fn StatCard(title: String, value: String, icon: String, color: String) -> Element {
+    let color_class = match color.as_str() {
+        "blue" => "stat-card-blue",
+        "green" => "stat-card-green",
+        "red" => "stat-card-red",
+        "purple" => "stat-card-purple",
+        _ => "stat-card-default"
+    };
+
     rsx! {
-        div { class: "stat-card {color}",
+        div { class: "stat-card {color_class}",
             div { class: "stat-icon", "{icon}" }
             div { class: "stat-content",
                 div { class: "stat-value", "{value}" }

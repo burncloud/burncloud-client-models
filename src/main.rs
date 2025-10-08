@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use burncloud_client_models::{
-    ModelManagement, SimpleModelManagement, EnhancedModelManagement, ModelStats
+    ModelManagement, SimpleModelManagement, EnhancedModelManagement, ModelStats,
+    app_state::AppState
 };
 
 fn main() {
@@ -19,7 +20,63 @@ fn main() {
 #[component]
 fn App() -> Element {
     let mut current_view = use_signal(|| "original".to_string());
+    let mut app_state = use_signal(|| None::<AppState>);
+    let mut loading = use_signal(|| true);
+    let mut error_message = use_signal(|| None::<String>);
 
+    // 初始化应用状态
+    use_effect(move || {
+        spawn(async move {
+            match AppState::new().await {
+                Ok(mut state) => {
+                    // 加载数据
+                    if let Err(e) = state.load_data().await {
+                        error_message.set(Some(format!("数据加载失败: {}", e.user_message())));
+                    }
+                    app_state.set(Some(state));
+                    loading.set(false);
+                }
+                Err(e) => {
+                    error_message.set(Some(format!("应用初始化失败: {}", e.user_message())));
+                    loading.set(false);
+                }
+            }
+        });
+    });
+
+    // 如果正在加载，显示加载界面
+    if *loading.read() {
+        return rsx! {
+            div { class: "loading-container",
+                style: "display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;",
+                div { class: "loading-spinner", "🔄" }
+                p { "正在初始化应用..." }
+            }
+        };
+    }
+
+    // 如果有错误，显示错误界面
+    if let Some(error) = error_message.read().as_ref() {
+        return rsx! {
+            div { class: "error-container",
+                style: "display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;",
+                div { class: "error-icon", "❌" }
+                h2 { "应用启动失败" }
+                p { "{error}" }
+                button {
+                    class: "btn btn-primary",
+                    onclick: move |_| {
+                        loading.set(true);
+                        error_message.set(None);
+                        // 重新尝试初始化
+                    },
+                    "重试"
+                }
+            }
+        };
+    }
+
+    // 正常界面
     rsx! {
         style { {include_str!("../assets/styles.css")} }
 
@@ -74,7 +131,10 @@ fn App() -> Element {
                                 h2 { class: "text-xl font-bold", "✨ 简化版模型管理" }
                                 p { class: "text-secondary", "使用 burncloud-service-models 数据源，支持搜索过滤" }
                             }
-                            SimpleModelManagement {}
+                            // 传递应用状态给组件
+                            if let Some(state) = app_state.read().as_ref() {
+                                SimpleModelManagement { app_state: state.clone() }
+                            }
                         }
                     },
                     "enhanced" => rsx! {
@@ -83,7 +143,10 @@ fn App() -> Element {
                                 h2 { class: "text-xl font-bold", "🚀 增强版模型管理" }
                                 p { class: "text-secondary", "完整的模型管理界面，展示所有 burncloud-service-models 功能" }
                             }
-                            EnhancedModelManagement {}
+                            // 传递应用状态给组件
+                            if let Some(state) = app_state.read().as_ref() {
+                                EnhancedModelManagement { app_state: state.clone() }
+                            }
                         }
                     },
                     "stats" => rsx! {
@@ -92,7 +155,10 @@ fn App() -> Element {
                                 h2 { class: "text-xl font-bold", "📊 模型统计分析" }
                                 p { class: "text-secondary", "基于 burncloud-service-models 数据的统计图表" }
                             }
-                            ModelStats {}
+                            // 传递应用状态给组件
+                            if let Some(state) = app_state.read().as_ref() {
+                                ModelStats { app_state: state.clone() }
+                            }
                         }
                     },
                     _ => rsx! { div { "未知页面" } }

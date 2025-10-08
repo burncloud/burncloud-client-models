@@ -1,76 +1,196 @@
 use dioxus::prelude::*;
 use burncloud_service_models::{InstalledModel, AvailableModel, ModelStatus, ModelType};
+use crate::app_state::AppState;
 
 #[component]
 pub fn ModelManagement() -> Element {
     let mut search_term = use_signal(|| String::new());
+    let mut app_state = use_signal(|| None::<AppState>);
+    let mut loading = use_signal(|| true);
+    let mut error_message = use_signal(|| None::<String>);
 
-    // NOTE: This component now requires AppState to be initialized with database
-    // Data should come from AppState context instead of example data
-    let installed_models = use_signal(|| Vec::<InstalledModel>::new());
-    let available_models = use_signal(|| Vec::<AvailableModel>::new());
-
-    rsx! {
-        div { class: "page-header",
-            div { class: "flex justify-between items-center",
-                div {
-                    h1 { class: "text-large-title font-bold text-primary m-0",
-                        "模型管理"
+    // 初始化应用状态并加载数据
+    use_effect(move || {
+        spawn(async move {
+            println!("🚀 ModelManagement: 开始初始化数据服务...");
+            match AppState::new().await {
+                Ok(mut state) => {
+                    println!("✅ ModelManagement: AppState 初始化成功");
+                    match state.load_data().await {
+                        Ok(_) => {
+                            println!("✅ ModelManagement: 数据加载成功");
+                            println!("📊 已安装模型数量: {}", state.installed_models.len());
+                            println!("📊 可用模型数量: {}", state.available_models.len());
+                            app_state.set(Some(state));
+                        }
+                        Err(e) => {
+                            let error_msg = format!("数据加载失败: {}", e);
+                            println!("❌ ModelManagement: {}", error_msg);
+                            error_message.set(Some(error_msg));
+                        }
                     }
-                    p { class: "text-secondary m-0 mt-sm",
-                        "管理和部署大语言模型"
-                    }
+                    loading.set(false);
                 }
-                div { class: "flex gap-md",
-                    button { class: "btn btn-secondary",
-                        span { "🔄" }
-                        "刷新"
-                    }
-                    button { class: "btn btn-secondary",
-                        span { "📁" }
-                        "浏览本地"
-                    }
-                    button { class: "btn btn-primary",
-                        span { "+" }
-                        "添加模型"
-                    }
+                Err(e) => {
+                    let error_msg = format!("应用初始化失败: {}", e);
+                    println!("❌ ModelManagement: {}", error_msg);
+                    error_message.set(Some(error_msg));
+                    loading.set(false);
                 }
             }
-            div { class: "mt-lg",
-                input {
-                    class: "input",
-                    style: "max-width: 400px;",
-                    placeholder: "搜索模型...",
-                    value: "{search_term}",
-                    oninput: move |evt| search_term.set(evt.value())
+        });
+    });
+
+    // 显示加载状态
+    if *loading.read() {
+        return rsx! {
+            div { class: "page-content",
+                style: "display: flex; justify-content: center; align-items: center; height: 400px; flex-direction: column;",
+                div { class: "loading-spinner", style: "font-size: 24px; margin-bottom: 16px;", "🔄" }
+                p { style: "color: #666; font-size: 16px;", "正在加载模型数据..." }
+                p { style: "color: #999; font-size: 14px;", "首次加载可能需要几秒钟" }
+            }
+        };
+    }
+
+    // 显示错误状态
+    if let Some(error) = error_message.read().as_ref() {
+        return rsx! {
+            div { class: "page-content",
+                style: "display: flex; justify-content: center; align-items: center; height: 400px; flex-direction: column;",
+                div { class: "error-icon", style: "font-size: 48px; margin-bottom: 16px;", "❌" }
+                h2 { style: "color: #e74c3c; margin-bottom: 8px;", "数据加载失败" }
+                p { style: "color: #666; margin-bottom: 16px;", "{error}" }
+                button {
+                    class: "btn btn-primary",
+                    onclick: move |_| {
+                        loading.set(true);
+                        error_message.set(None);
+                        // 重新加载数据
+                    },
+                    "重试"
+                }
+            }
+        };
+    }
+
+    // 正常显示数据
+    let state_ref = app_state.read();
+    let state_option = state_ref.as_ref();
+
+    match state_option {
+        Some(state) => {
+            let installed_models = &state.installed_models;
+            let available_models = &state.available_models;
+
+            rsx! {
+                div { class: "page-header",
+                    div { class: "flex justify-between items-center",
+                        div {
+                            h1 { class: "text-large-title font-bold text-primary m-0",
+                                "模型管理"
+                            }
+                            p { class: "text-secondary m-0 mt-sm",
+                                "管理和部署大语言模型"
+                            }
+                        }
+                        div { class: "flex gap-md",
+                            button {
+                                class: "btn btn-secondary",
+                                onclick: move |_| {
+                                    loading.set(true);
+                                    error_message.set(None);
+                                    // 重新加载数据的逻辑
+                                    spawn(async move {
+                                        // 创建新的AppState实例并加载数据
+                                        match AppState::new().await {
+                                            Ok(mut new_state) => {
+                                                match new_state.load_data().await {
+                                                    Ok(_) => app_state.set(Some(new_state)),
+                                                    Err(e) => error_message.set(Some(format!("{}", e))),
+                                                }
+                                            }
+                                            Err(e) => error_message.set(Some(format!("{}", e))),
+                                        }
+                                        loading.set(false);
+                                    });
+                                },
+                                span { "🔄" }
+                                "刷新"
+                            }
+                            button { class: "btn btn-secondary",
+                                span { "📁" }
+                                "浏览本地"
+                            }
+                            button { class: "btn btn-primary",
+                                span { "+" }
+                                "添加模型"
+                            }
+                        }
+                    }
+                    div { class: "mt-lg",
+                        input {
+                            class: "input",
+                            style: "max-width: 400px;",
+                            placeholder: "搜索模型...",
+                            value: "{search_term}",
+                            oninput: move |evt| search_term.set(evt.value())
+                        }
+                    }
+                }
+
+                div { class: "page-content",
+                    // 已安装模型
+                    div { class: "mb-xxxl",
+                        h2 { class: "text-title font-semibold mb-lg",
+                            "已安装模型 ({installed_models.len()})"
+                        }
+                        if installed_models.is_empty() {
+                            div { class: "empty-state",
+                                style: "text-align: center; padding: 40px; color: #666;",
+                                div { style: "font-size: 48px; margin-bottom: 16px;", "📦" }
+                                h3 { style: "margin-bottom: 8px;", "暂无已安装模型" }
+                                p { "从下方的可安装模型列表中选择并安装模型" }
+                            }
+                        } else {
+                            div { class: "grid gap-lg",
+                                style: "grid-template-columns: 1fr;",
+                                for installed_model in installed_models.iter() {
+                                    InstalledModelCard { model: installed_model.clone() }
+                                }
+                            }
+                        }
+                    }
+
+                    // 可安装模型
+                    div {
+                        h2 { class: "text-title font-semibold mb-lg",
+                            "可安装模型 ({available_models.len()})"
+                        }
+                        if available_models.is_empty() {
+                            div { class: "empty-state",
+                                style: "text-align: center; padding: 40px; color: #666;",
+                                div { style: "font-size: 48px; margin-bottom: 16px;", "🌐" }
+                                h3 { style: "margin-bottom: 8px;", "暂无可安装模型" }
+                                p { "请检查网络连接或稍后重试" }
+                            }
+                        } else {
+                            div { class: "grid gap-lg",
+                                style: "grid-template-columns: 1fr;",
+                                for available_model in available_models.iter() {
+                                    AvailableModelCard { model: available_model.clone() }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        div { class: "page-content",
-            // 已安装模型
-            div { class: "mb-xxxl",
-                h2 { class: "text-title font-semibold mb-lg",
-                    "已安装模型 ({installed_models.read().len()})"
-                }
-                div { class: "grid gap-lg",
-                    style: "grid-template-columns: 1fr;",
-                    for installed_model in installed_models.read().iter() {
-                        InstalledModelCard { model: installed_model.clone() }
-                    }
-                }
-            }
-
-            // 可安装模型
-            div {
-                h2 { class: "text-title font-semibold mb-lg",
-                    "可安装模型 (官方仓库)"
-                }
-                div { class: "grid gap-lg",
-                    style: "grid-template-columns: 1fr;",
-                    for available_model in available_models.read().iter() {
-                        AvailableModelCard { model: available_model.clone() }
-                    }
+        None => {
+            rsx! {
+                div { class: "page-content",
+                    style: "display: flex; justify-content: center; align-items: center; height: 400px;",
+                    p { style: "color: #666; font-size: 16px;", "数据未初始化" }
                 }
             }
         }

@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 1: Initialize the integrated service (all layers)
     println!("\n📚 Step 1: Initializing integrated model service...");
-    let service = IntegratedModelService::new(Some("./test_models.db".to_string())).await?;
+    let service = IntegratedModelService::new(Some("./fresh_test_models.db".to_string())).await?;
     println!("✅ Service initialized successfully!");
 
     // Step 2: Verify empty state
@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         CreateModelRequest {
             name: "mistral-7b-instruct".to_string(),
             display_name: "Mistral 7B Instruct".to_string(),
-            version: "0.2".to_string(),
+            version: "0.2.0".to_string(),
             model_type: ModelType::Text,
             provider: "Mistral AI".to_string(),
             file_size: 7_516_192_768, // 7GB
@@ -264,7 +264,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Cleanup
     println!("\n🧹 Cleaning up test database...");
-    if let Err(e) = std::fs::remove_file("./test_models.db") {
+    if let Err(e) = std::fs::remove_file("./fresh_test_models.db") {
         println!("Note: Could not remove test database: {}", e);
     }
 

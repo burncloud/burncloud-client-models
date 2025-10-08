@@ -4,7 +4,8 @@
 //! by testing ModelDataService and AppState with actual database connections.
 
 use burncloud_client_models::{
-    ModelDataService, AppState,
+    ModelDataService,
+    state::AppState,
     burncloud_service_models::{
         ModelsService, CreateModelRequest, ModelType, ModelStatus
     },

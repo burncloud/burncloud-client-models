@@ -485,7 +485,7 @@ async fn test_system_state_consistency() {
 #[tokio::test]
 async fn test_system_recovery_and_durability() {
     // Use memory database for simplicity - durability is tested by recreating service
-    let model_id = {
+    let _model_id = {
         // Create service and populate data
         let service = setup_integrated_test().await;
 
